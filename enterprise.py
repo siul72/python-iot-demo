@@ -40,13 +40,14 @@ class BaseJson:
 
 
 class TagPayload(BaseJson):
-    def __init__(self, value):
-        super().__init__()
+    def __init__(self, j=None):
+        super().__init__(j)
+ 
+
+    def update_value(self, value):
         self.timestamp = int(datetime.utcnow().timestamp())
         self.value = value
         self.type = f"{type(self.value)}"
-
-class Temperature(BaseJson):
-    def __init__(self, j):
-        super().__init__(j)
+ 
+ 
     

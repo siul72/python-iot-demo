@@ -34,16 +34,29 @@ class MQTTClient:
         self.client = None
         
 
-    def connect_mqtt(self):
+    def connect_mqtt(self, connect_callback = None, disconnect_callback = None):
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
                 print("Connected to MQTT Broker!")
             else:
                 print("Failed to connect, return code %d\n", rc)
 
+        def on_disconnect(client, userdata, flags, rc):
+            if rc == 0:
+                print("Disconnected to MQTT Broker!")
+            else:
+                print("Error on disconnect, return code %d\n", rc)
+                
         self.client = mqtt_client.Client(self.client_id)
         # client.username_pw_set(username, password)
         self.client.on_connect = on_connect
+        if connect_callback:
+            self.client.on_connect = connect_callback
+
+        self.client.on_disconnect = on_disconnect
+        if disconnect_callback:
+            self.client.on_disconnect = disconnect_callback
+            
         self.client.connect(self.broker, self.port)
  
  

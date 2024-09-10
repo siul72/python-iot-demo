@@ -23,14 +23,14 @@ __version__ = "0.0.1"
 
 from tkinter import *
 from mqtt_client import MQTTClient
-from enterprise import Temperature
+from smartiot_enterprise import TemperatureDataPoint
 
 
 class DisplayGateway(MQTTClient):
     def __init__(self):
         super().__init__()
         self.create_window()
-        self.topic = f"freezer/+/temperature/celsius"
+        self.temperature = TemperatureDataPoint()
 
     def create_window(self):
         # create root window
@@ -39,29 +39,40 @@ class DisplayGateway(MQTTClient):
         icon=PhotoImage(file="favicon-32x32.png")
         self.root.iconphoto(True,icon)
         self.root.geometry('350x200')
-        self.temperature = StringVar()
-        lbl = Label(self.root, textvariable=self.temperature, font=("Helvetica", 32))
+        self.temperature_value = StringVar()
+        lbl = Label(self.root, textvariable=self.temperature_value, font=("Helvetica", 32))
         lbl.place(relx = 0.5, rely = 0.5, anchor = CENTER)
-        self.temperature.set("-.- \u00B0C")
+        self.temperature_value.set("-.- \u00B0C")
+        self.canvas = Canvas(self.root, width=40, height=40)
+        self.canvas.place(relx=0.99, rely=0.99, anchor=CENTER)
+        self.connection_status = self.canvas.create_rectangle(10, 10, 20, 20, fill="white")
+        
 
     def subscribe(self):
          
         def on_message(client, userdata, msg):
              
             m_decode=str(msg.payload.decode("utf-8","ignore"))
-            # print(f"Received {m_decode} from {msg.topic} topic")
-            temp = Temperature(m_decode)
+            print(f"Received {m_decode} from {msg.topic} topic")
+            self.temperature.snapshot.update_payload(m_decode)
             # print(f"Parsed as {temp}  ")
-            self.temperature.set(f"{temp.value}.0 \u00B0C")
-
-        self.client.subscribe(self.topic)
-        self.client.on_message = on_message
+            self.temperature_value.set(f"{self.temperature.snapshot.value}.0 \u00B0C")
         
-    
-    def run(self):
-        self.connect_mqtt()
-        self.client.loop_start()
+        self.temperature.snapshot.subscribe(self.client)
+        self.temperature.snapshot.add_callback = on_message
+ 
+    def on_connect(self, client, userdata, flags, rc):
+        print("Set display connected!")
+        self.canvas.itemconfig(self.connection_status, fill="blue")
         self.subscribe()
+         
+    def on_disconnect(self, userdata, flags, rc):
+        print("Set display disconnected!")
+        self.canvas.itemconfig(self.connection_status, fill="white")
+   
+    def run(self):
+        self.connect_mqtt(self.on_connect, self.on_disconnect)
+        self.client.loop_start()
         self.root.mainloop()
 
 if __name__ == '__main__':

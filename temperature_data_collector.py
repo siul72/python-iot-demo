@@ -22,35 +22,37 @@ __status__ = "Production"
 __version__ = "0.0.1"
 
 from mqtt_client import MQTTClient 
-from enterprise import TagPayload
 import uuid
 import random
 import time
+from smartiot_enterprise import TemperatureDataPoint
+ 
 
 class TemperatureDataCollector(MQTTClient):
 
     def __init__(self):
-        super().__init__() 
-        self.topic = f"freezer/{str(uuid.uuid4())}/temperature/celsius"
-        self.temperature = random.randint(-10, 30)
-
+        super().__init__()
+        self.temperature = TemperatureDataPoint()
+        self._source_data = random.randint(-10, 30)
+        
+        
     def update_temperature(self):
         delta = random.randint(-4, 4)
-        self.temperature = self.temperature + delta
-        if self.temperature < -10 :
-            self.temperature = -10
-        if self.temperature > 30:
-            self.temperature = 30
-        return self.temperature
+        _data = self._source_data + delta
+        if _data < -10 :
+            _data = -10
+        if _data > 30:
+            _data = 30
+        self._source_data = _data    
+        return self._source_data
         
     def publish(self):
          
         while True:
-            
-            self.update_temperature() 
-            msg = TagPayload(self.temperature).get_json_string()
-            result = self.client.publish(self.topic, msg)
-            # result: [0, 1]
+             
+            self.temperature.snapshot.payload.update_value(self.update_temperature())
+            msg = self.snapshot.get_json_string()
+            result = self.client.publish(self.temperature.snapshot.topic, self.temperature.snapshot.payload.get_json_string())
             status = result[0]
             if status == 0:
                 print(f"Send `{msg}` to topic `{self.topic}`")

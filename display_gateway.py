@@ -56,10 +56,10 @@ class DisplayGateway(MQTTClient):
             print(f"Received {m_decode} from {msg.topic} topic")
             self.temperature.snapshot.update_payload(m_decode)
             # print(f"Parsed as {temp}  ")
-            self.temperature_value.set(f"{self.temperature.snapshot.value}.0 \u00B0C")
+            self.temperature_value.set(f"{self.temperature.snapshot.payload.value}.0 \u00B0C")
         
         self.temperature.snapshot.subscribe(self.client)
-        self.temperature.snapshot.add_callback = on_message
+        self.temperature.snapshot.add_callback(self.client, on_message)
  
     def on_connect(self, client, userdata, flags, rc):
         print("Set display connected!")
@@ -68,6 +68,7 @@ class DisplayGateway(MQTTClient):
          
     def on_disconnect(self, userdata, flags, rc):
         print("Set display disconnected!")
+        self.temperature_value.set("-.- \u00B0C")
         self.canvas.itemconfig(self.connection_status, fill="white")
    
     def run(self):

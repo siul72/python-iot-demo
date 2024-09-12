@@ -48,24 +48,30 @@ class TemperatureDataCollector(MQTTClient):
         
     def publish(self):
          
-        while True:
-             
+        while self.connected:
             self.temperature.snapshot.payload.update_value(self.update_temperature())
-            msg = self.snapshot.get_json_string()
-            result = self.client.publish(self.temperature.snapshot.topic, self.temperature.snapshot.payload.get_json_string())
+            msg = self.temperature.snapshot.payload.get_json_string()
+            result = self.client.publish(self.temperature.snapshot.publish_topic, msg)
             status = result[0]
             if status == 0:
-                print(f"Send `{msg}` to topic `{self.topic}`")
+                print(f"Send `{msg}` to topic `{self.temperature.snapshot.publish_topic}`")
             else:
-                print(f"Failed to send message to topic {self.topic}")
+                print(f"Failed to send message to topic {self.temperature.snapshot.publish_topic}")
             time.sleep(60)
- 
+
+    def on_connect(self, client, userdata, flags, rc):
+        print("mqtt connected!")
+        self.connected = True 
+        self.publish()
+         
+    def on_disconnect(self, userdata, flags, rc):
+        print("mqtt disconnected!")
+        self.connected = False 
 
     def run(self):
-        self.connect_mqtt()
+        self.connect_mqtt(self.on_connect, self.on_disconnect)
         self.client.loop_start()
-        self.publish()
-        self.client.loop_stop()
+   
 
 
 if __name__ == '__main__':

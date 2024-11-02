@@ -15,11 +15,11 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 
 __author__ = "Luis Coelho"
 __contact__ = "luis.coelho.720813@gmail.com"
-__date__ = "2024.08"
+__date__ = "2024.11"
 __deprecated__ = False
 __license__ = "BSD 2-Clause License"
 __status__ = "Production"
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 
 from mqtt_client import MQTTClient 
 import uuid

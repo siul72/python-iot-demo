@@ -22,6 +22,7 @@ __status__ = "Production"
 __version__ = "0.0.1"
 
 import random
+import time
 from paho.mqtt import client as mqtt_client
  
 
@@ -38,8 +39,10 @@ class MQTTClient:
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
                 print("Connected to MQTT Broker!")
+                self.client.publish("test", "test")
             else:
                 print("Failed to connect, return code %d\n", rc)
+                
 
         def on_disconnect(client, userdata, flags, rc):
             if rc == 0:
@@ -56,8 +59,16 @@ class MQTTClient:
         self.client.on_disconnect = on_disconnect
         if disconnect_callback:
             self.client.on_disconnect = disconnect_callback
-            
-        self.client.connect(self.broker, self.port)
+        print(f"connect to {self.broker}:{self.port}-->")
+        self.client.connect_async(self.broker, self.port)
+        print(f"current client {self.client}")
+
+if __name__ == '__main__':
+    print("start")
+    tdc = MQTTClient()
+    tdc.connect_mqtt()
+    tdc.client.loop_start()
+    
  
  
 

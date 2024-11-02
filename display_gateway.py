@@ -51,15 +51,24 @@ class DisplayGateway(MQTTClient):
     def subscribe(self):
          
         def on_message(client, userdata, msg):
-             
             m_decode=str(msg.payload.decode("utf-8","ignore"))
             print(f"Received {m_decode} from {msg.topic} topic")
             self.temperature.snapshot.update_payload(m_decode)
             # print(f"Parsed as {temp}  ")
             self.temperature_value.set(f"{self.temperature.snapshot.payload.value}.0 \u00B0C")
+
+        def on_response_message(client, userdata, msg):
+            m_decode=str(msg.payload.decode("utf-8","ignore"))
+            print(f"Received {m_decode} from {msg.topic} topic")
+            self.temperature.snapshot.update_payload(m_decode)
+            self.temperature_value.set(f"{self.temperature.snapshot.payload.value}.0 \u00B0C")
+            
         
         self.temperature.snapshot.subscribe(self.client)
         self.temperature.snapshot.add_callback(self.client, on_message)
+        self.temperature.response.subscribe(self.client)
+        self.temperature.response.add_callback(self.client, on_response_message)
+        self.temperature.request.publish(self.client)
  
     def on_connect(self, client, userdata, flags, rc):
         print("Set display connected!")

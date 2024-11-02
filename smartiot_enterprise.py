@@ -28,6 +28,10 @@ class TagMqtt():
     def __init__(self, publish_topic, subscription_topic):
         self.subscription_topic = subscription_topic
         self.publish_topic = publish_topic
+        self.payload = "{}"
+
+    def publish(self, mqtt_client):
+        mqtt_client.publish(self.publish_topic, self.payload)
 
     def subscribe(self, mqtt_client):
         mqtt_client.subscribe(self.subscription_topic)
